@@ -10,126 +10,144 @@ and is a set of random tools
 
 import os
 import sys
+
+from cmd2 import Cmd
+
 from .log import LOG
 
 OBJECTS_DIR = os.getcwd() + "/o"
 
 
-def _print():
+class yApp(Cmd):
+    """command line utilities for y processing"""
 
-    from fitz import fitz
+    def __init__(self):
+        super().__init__()
+        self.prompt = ":> "
 
-    out = fitz.open("index.pdf")
+    def do_fmt(self, args):
+        from .chinese import ChineseHouse, Hexagram
+        from . import YSequence
 
-    with open("play.log") as play_log:
+        for line in sys.stdin.readlines():
+            try:
+                reading = line[:51]
+                extra = line[51:]
 
-        for p in reversed(play_log.readlines()):
-            print(p.rstrip())
+                rooms = [YSequence(r) for r in reading.split()]
+                house = ChineseHouse(rooms)
+
+                x_real = Hexagram(house.major.real)
+                x_imag = Hexagram(house.major.imag)
+                print(
+                    house.composition,
+                    extra.rstrip(),
+                )
+            except:
+                print(line.rstrip(), file=sys.stderr)
+
+        return 0
+
+    def do_play(self, args):
+        from y.chinese import ChineseHouse, Hexagram
+
+        rooms = ChineseHouse.play()
+        house = ChineseHouse(rooms)
+        print(house.composition)
+
+        return 0
+
+    def do_commit(self, args):
+        import subprocess
+        from y.chinese import ChineseHouse
+
+        house = ChineseHouse(ChineseHouse.play())
+        composition = house.composition
 
 
-def _play():
-    from y.chinese import ChineseHouse, Hexagram
+        def check_modified():
+            proc = subprocess.Popen(['git','status'],stdout=subprocess.PIPE)
+            while True:
+                line = proc.stdout.readline()
+                if not line:
+                  return False
+                
+                if line.startswith(b'\tmodified:   '):
+                  return True
 
-    rooms = ChineseHouse.play()
-    house = ChineseHouse(rooms)
+            return False
 
-    x_real = Hexagram(house.major.real)
-    x_imag = Hexagram(house.major.imag)
-    print(house.composition)
+        if not check_modified():
+            return 1
 
+        house = ChineseHouse(ChineseHouse.play())
+        composition = house.composition
 
-def _fmt():
-    for line in sys.stdin.readlines():
-        try:
-            reading = line[:51]
-            extra = line[51:]
+        with open("play.log", "a") as play_log:
+            play_log.write(composition + "\n")
 
-            rooms = [YSequence(r) for r in reading.split()]
-            house = ChineseHouse(rooms)
+        # subprocess.run(("git", "add", "-f", "play.log", "index.*"))
 
-            x_real = Hexagram(house.major.real)
-            x_imag = Hexagram(house.major.imag)
-            print(
-                house.composition,
-                extra.rstrip(),
+        subprocess.run(("git", "commit", "-a", "-q", "-m", composition))
+
+        return 0
+
+    def do_draw(self, args):
+        from .draw import yDrawApp
+
+        draw_app = yDrawApp()                                  
+        sys.exit(draw_app.cmdloop())  
+
+    def do_download(self, args):
+        import subprocess
+
+        # import yt_dlp
+
+        _YDL_OPTS = {
+            "format": "mp4",
+            "write-info-json": True,
+            "write-sub": True,
+            "sub-lang": "en",
+        }
+
+        for url in sys.argv[2:]:
+
+            target_dir = OBJECTS_DIR
+
+            if "youtube" in url or "youtu.be" in url:
+                target_dir = target_dir + "/yt"
+
+            target = target_dir + "/%(id)s.%(ext)s"
+
+            LOG.info(f"download {url} to {target}")
+            subprocess.run(
+                (
+                    "yt-dlp",
+                    "-f",
+                    "mp4",
+                    "--write-info-json",
+                    "--write-sub",
+                    "--sub-lang",
+                    "en",
+                    "-o",
+                    target,
+                    url,
+                )
             )
-        except:
-            print(line.rstrip(), file=sys.stderr)
 
+            print(f"downloaded {target}")
 
-def _commit():
-    import subprocess
-
-    from y.chinese import ChineseHouse
-
-    house = ChineseHouse(ChineseHouse.play())
-    composition = house.composition
-
-    with open("play.log", "a") as play_log:
-        play_log.write(composition + "\n")
-
-    subprocess.run(("git", "add", "-f", "play.log", "index.*"))
-
-    subprocess.run(("git", "commit", "-q", "-m", composition))
-
-
-def _download():
-    import subprocess
-
-    # import yt_dlp
-
-    _YDL_OPTS = {
-        "format": "mp4",
-        "write-info-json": True,
-        "write-sub": True,
-        "sub-lang": "en",
-    }
-
-    for url in sys.argv[2:]:
-
-        target_dir = OBJECTS_DIR
-
-        if "youtube" in url or "youtu.be" in url:
-            target_dir = target_dir + "/yt"
-
-        target = target_dir + "/%(id)s.%(ext)s"
-
-        LOG.info(f"download {url} to {target}")
-        subprocess.run(
-            (
-                "yt-dlp",
-                "-f",
-                "mp4",
-                "--write-info-json",
-                "--write-sub",
-                "--sub-lang",
-                "en",
-                "-o",
-                target,
-                url,
-            )
-        )
+        return 0
 
 
 if __name__ == "__main__":
+
+    app = yApp()
+
     if len(sys.argv) > 1:
+        from shlex import join as shlex_join
 
-        match sys.argv[1]:
-
-            case "print":
-                _print()
-
-            case "play":
-                _play()
-
-            case "commit":
-                _commit()
-
-            case "download":
-                _download()
-
-            case _:
-                _fmt()
+        sys.exit(app.onecmd(shlex_join(sys.argv[1:])))
 
     else:
-        _fmt()
+        sys.exit(app.cmdloop())

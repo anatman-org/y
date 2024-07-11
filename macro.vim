@@ -48,17 +48,17 @@ def parse_yi(start, end, raw_args=""):
           if "-w" in args:
               w_real = Hexagram(house.major.real).wen
               w_imag = Hexagram(house.major.imag).wen
-              output += f" w{w_real}>{w_imag} "
+              output += f" w{w_real}⋅{w_imag} "
 
           if "-x" in args:
               x_real = Hexagram(house.major.real)
               x_imag = Hexagram(house.major.imag)
-              output += f" {x_real}>{x_imag} "
+              output += f" {x_real}⋅{x_imag} "
 
           if "-y" in args:
               y_real = house.major.real
               y_imag = house.major.imag
-              output += f" y{y_real:02o}>{y_imag:02o} "
+              output += f" y{y_real:02o}⋅{y_imag:02o} "
 
           if not "-z" in args:
               output += f"{line[50:].rstrip()}" 
@@ -95,7 +95,7 @@ def case_cloud(start, end):
 
 def grab(url, start, end):
 
-    message_dialog( title='Example dialog window', text='Do you want to continue?\nPress ENTER to quit.').run()
+    vim.message_dialog( title='Example dialog window', text='Do you want to continue?\nPress ENTER to quit.').run()
 
     vim.current.line = f"{url} {start} {end}"
     

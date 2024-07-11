@@ -68,6 +68,7 @@ class Y_BitState(SimpleNamespace):
             self.value,
             self.pair,
             *list(self.dot),
+            *list(self.dot_alt),
             *list(self.extra),
             *list(self.unicode),
         ):
@@ -78,6 +79,7 @@ class Y_BitState(SimpleNamespace):
 
 GLYPHS = """○●◎◉⊖⊝⊕⨶⨷⦻⊗⊖⊗⊘⊙⊚⊛⊜⊝🜔🜕🜖🜗𝇈𝇉⨷⨀⨁⦿⦾⦻⦰⚪⚫◉◍◎●◐◑◒◓◔◕◯⊕⊖⊗⊘⊙⊚⊛⊜⊝◉◍◎●◯⚌⚍⚏⚎⚊⚋◯○"""
 PRODUCT = """⋅·"""
+GLYPHS2 = "●ⴲⴱⵀⵔ"
 
 ## DEFINITION OF Y STATES
 #
@@ -87,7 +89,8 @@ Yin = Y_BitState(
     name="yin",
     lines=8,
     unicode="⚋",
-    dot="●◍",
+    dot_alt="●◍",
+    dot="●",
     value=-1 + 0j,
     extra="⚏●⬤02-●•●●",
     pair=(0, 0),
@@ -96,7 +99,8 @@ Yang = Y_BitState(
     name="yang",
     lines=7,
     unicode="⚊",
-    dot="○◯",
+    dot_alt="○◯",
+    dot="ⵔ",
     value=1 + 0j,
     extra="⚌ⵔ❍⭕1+ⵔ❍⭘",
     pair=(1, 1),
@@ -105,7 +109,8 @@ OldYang = Y_BitState(
     name="old-yang",
     lines=9,
     value=0 + 1j,
-    dot="⦵⦶⦸",
+    dot_alt="⦵⦶⦸",
+    dot="ⴱⵀ",
     extra="3%iⵀⴱ∅⦸⦶◎ⵀ⊖⊝⦵⦶⦸",
     unicode="⚎",
     pair=(1, 0),
@@ -114,7 +119,8 @@ OldYin = Y_BitState(
     name="old-yin",
     lines=6,
     value=0 - 1j,
-    dot="⊗⊕",
+    dot="ⴲ",
+    dot_alt="⊗⊕",
     extra="*4ⴲ⊗⊕∗ⴲ⨁ⴲ◉⊗⊕⊕⨂⨁⨶⨷⦻⊗",
     unicode="⚍",
     pair=(0, 1),
